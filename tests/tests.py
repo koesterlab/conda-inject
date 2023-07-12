@@ -7,7 +7,6 @@ def test_env_inject():
         import humanfriendly  # noqa F401
 
 
-
 def test_package_inject():
     with inject_packages(channels=["conda-forge"], packages=["humanfriendly =10.0"]):
         import humanfriendly  # noqa F401

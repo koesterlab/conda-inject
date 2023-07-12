@@ -92,10 +92,7 @@ def inject_env(
 
     envs = _get_envs(package_manager)
 
-    if (
-        env_name
-        not in envs
-    ):
+    if env_name not in envs:
         with tempfile.NamedTemporaryFile(suffix=".conda.yaml", mode="w") as tmp:
             yaml.dump(env, tmp)
             tmp.flush()
@@ -127,13 +124,13 @@ def _inject_path(env_name: str, package_manager: PackageManager):
 
 def _get_envs(package_manager: PackageManager) -> set[str]:
     envs = json.loads(
-            sp.run(
-                [package_manager.value, "env", "list", "--json"],
-                check=True,
-                stdout=sp.PIPE,
-                stderr=sp.PIPE,
-            ).stdout.decode()
-        )["envs"]
+        sp.run(
+            [package_manager.value, "env", "list", "--json"],
+            check=True,
+            stdout=sp.PIPE,
+            stderr=sp.PIPE,
+        ).stdout.decode()
+    )["envs"]
     return {env.name: env for env in map(Environment, envs)}
 
 
