@@ -1,3 +1,4 @@
+from dataclasses import dataclass
 import hashlib
 import json
 import os
@@ -9,16 +10,51 @@ import tempfile
 
 import yaml
 
-package_spec_pattern = re.compile("(?P<package>[^=><\s]+)(\s*)(?P<constraint>.+)?")
+package_spec_pattern = re.compile(r"(?P<package>[^=><\s]+)(\s*)(?P<constraint>.+)?")
 
 
 class PackageManager(Enum):
     """Enum of supported package managers."""
+
     MAMBA = "mamba"
     CONDA = "conda"
 
 
-def inject_packages(channels: list[str], packages: list[str], package_manager: PackageManager = PackageManager.MAMBA):
+@dataclass
+class Environment:
+    path: str
+
+    @property
+    def name(self):
+        return os.path.basename(self.path)
+
+
+@dataclass
+class InjectedEnvironment:
+    name: str
+    package_manager: PackageManager
+
+    def remove(self):
+        """Remove the environment."""
+        sp.run(
+            [self.package_manager.value, "env", "remove", "-n", self.name, "-y"],
+            check=True,
+            stdout=sp.PIPE,
+            stderr=sp.PIPE,
+        )
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *args):
+        self.remove()
+
+
+def inject_packages(
+    channels: list[str],
+    packages: list[str],
+    package_manager: PackageManager = PackageManager.MAMBA,
+) -> InjectedEnvironment:
     """Inject conda packages into the current environment.
 
     Args:
@@ -30,14 +66,18 @@ def inject_packages(channels: list[str], packages: list[str], package_manager: P
         "dependencies": packages,
     }
 
-    inject_env(env, package_manager)
+    return inject_env(env, package_manager)
 
 
-def inject_env(env: dict[str, list], package_manager: PackageManager = PackageManager.MAMBA):
+def inject_env(
+    env: dict[str, list], package_manager: PackageManager = PackageManager.MAMBA
+) -> InjectedEnvironment:
     """Inject conda packages into the current environment.
 
     Args:
-        env: Environment to inject.
+        env: Environment to inject, given as dict with the keys `channels` and
+             `dependencies`. The expected values are the same as for conda
+             `environment.yml` files.
     """
     _check_env(env)
 
@@ -46,20 +86,55 @@ def inject_env(env: dict[str, list], package_manager: PackageManager = PackageMa
     env["dependencies"].append(python_package)
 
     checksum = hashlib.sha256()
-    checksum.update(yaml.dumps(env).encode("utf-8"))
+    checksum.update(json.dumps(env).encode("utf-8"))
     env_checksum = checksum.hexdigest()
-    env_name = f"conda-inject-{env_checksum}"
+    env_name = f"conda-inject-{env_checksum}_"
 
-    with tempfile.NamedTemporaryFile(suffix=".conda.yaml") as tmp:
-        yaml.dump(env, tmp)
-        tmp.flush()
-        cmd = [package_manager.value, "env", "create", "-y", "--name", env_name, "-f", tmp.name]
-        sp.run(cmd, check=True)
+    envs = _get_envs(package_manager)
 
-    conda_prefix = os.environ['CONDA_PREFIX']
+    if (
+        env_name
+        not in envs
+    ):
+        with tempfile.NamedTemporaryFile(suffix=".conda.yaml", mode="w") as tmp:
+            yaml.dump(env, tmp)
+            tmp.flush()
+            cmd = [
+                package_manager.value,
+                "env",
+                "create",
+                "--name",
+                env_name,
+                "-f",
+                tmp.name,
+            ]
+            sp.run(cmd, check=True, stdout=sp.PIPE, stderr=sp.PIPE)
+
+    _inject_path(env_name, package_manager)
+    return InjectedEnvironment(name=env_name, package_manager=package_manager)
+
+
+def _inject_path(env_name: str, package_manager: PackageManager):
+    envs = _get_envs(package_manager)
+    env = envs[env_name]
+
     sys.path.append(
-        f"{conda_prefix}/envs/{env_name}/lib/python{sys.version_info.major}.{sys.version_info.minor}/site-packages"
+        f"{env.path}/lib/"
+        f"python{sys.version_info.major}.{sys.version_info.minor}/"
+        "site-packages"
     )
+
+
+def _get_envs(package_manager: PackageManager) -> set[str]:
+    envs = json.loads(
+            sp.run(
+                [package_manager.value, "env", "list", "--json"],
+                check=True,
+                stdout=sp.PIPE,
+                stderr=sp.PIPE,
+            ).stdout.decode()
+        )["envs"]
+    return {env.name: env for env in map(Environment, envs)}
 
 
 def _check_env(env: dict[str, list]) -> bool:
