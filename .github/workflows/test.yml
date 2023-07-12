@@ -76,6 +76,14 @@ jobs:
         run: |
           poetry install
 
+      - name: Setup mamba
+        uses: conda-incubator/setup-miniconda@v2
+        with:
+          activate-environment: base
+          channels: "conda-forge"
+          miniforge-variant: Mambaforge
+          miniforge-version: latest
+
       - name: Run pytest
         run: poetry run coverage run -m pytest tests/tests.py
 
