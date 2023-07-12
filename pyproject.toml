@@ -1,0 +1,24 @@
+[tool.poetry]
+authors = ["Johannes Köster <johannes.koester@uni-due.de>"]
+description = "Helper functions for injecting a conda environment into the current python environment (by modifying sys.path, without actually changing the current python environment)."
+name = "conda-inject"
+packages = [{include = "conda_inject"}]
+readme = "README.md"
+version = "0.1.0"
+
+[tool.poetry.dependencies]
+python = "^3.11"
+pyyaml = "^6.0"
+
+[build-system]
+build-backend = "poetry.core.masonry.api"
+requires = ["poetry-core"]
+
+[tool.coverage.run]
+omit = [".*", "*/site-packages/*"]
+
+[tool.coverage.report]
+fail_under = 0
+
+[tool.poetry.scripts]
+yte = "yte:main"
