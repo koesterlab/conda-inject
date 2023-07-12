@@ -33,6 +33,8 @@ jobs:
 
   linting:
     runs-on: ubuntu-latest
+    needs:
+      - formatting
     steps:
       - name: Check out the code
         uses: actions/checkout@v3
