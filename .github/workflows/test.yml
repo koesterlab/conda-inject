@@ -79,12 +79,13 @@ jobs:
       - name: Setup mamba
         uses: conda-incubator/setup-miniconda@v2
         with:
-          activate-environment: base
+          activate-environment: test
           channels: "conda-forge"
           miniforge-variant: Mambaforge
           miniforge-version: latest
 
       - name: Run pytest
+        shell: bash -el {0}
         run: poetry run coverage run -m pytest tests/tests.py
 
       - name: Run Coverage
