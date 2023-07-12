@@ -15,17 +15,22 @@ jobs:
           release-type: python
           package-name: conda-inject
 
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         if: ${{ steps.release.outputs.release_created }}
 
-      - uses: actions/setup-python@v2
+      - name: Install poetry
+        if: ${{ steps.release.outputs.release_created }}
+        run: pipx install poetry
+
+      - name: Determine dependencies
+        if: ${{ steps.release.outputs.release_created }}
+        run: poetry lock
+
+      - uses: actions/setup-python@v4
         if: ${{ steps.release.outputs.release_created }}
         with:
           python-version: "3.11"
-
-      - name: Setup poetry
-        if: ${{ steps.release.outputs.release_created }}
-        uses: abatilo/actions-poetry@v2.0.0
+          cache: poetry
 
       - name: Install Dependencies using Poetry
         if: ${{ steps.release.outputs.release_created }}
