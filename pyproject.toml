@@ -27,5 +27,3 @@ omit = [".*", "*/site-packages/*"]
 [tool.coverage.report]
 fail_under = 0
 
-[tool.poetry.scripts]
-yte = "yte:main"
