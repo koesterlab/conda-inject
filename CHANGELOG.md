@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.0.2](https://github.com/koesterlab/conda-inject/compare/v1.0.1...v1.0.2) (2023-07-13)
+
+
+### Bug Fixes
+
+* remove remainder from yte derived skeleton in pyproject.toml ([a5ba91f](https://github.com/koesterlab/conda-inject/commit/a5ba91fd3b8cf365a00115eb7fb88381fa436e21))
+
 ## [1.0.1](https://github.com/koesterlab/conda-inject/compare/v1.0.0...v1.0.1) (2023-07-12)
 
 
