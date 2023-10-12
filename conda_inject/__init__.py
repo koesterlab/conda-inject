@@ -49,7 +49,7 @@ class InjectedEnvironment:
             [self.package_manager.value, "env", "remove", "-n", self.name, "-y"],
             check=True,
             stdout=sp.PIPE,
-            stderr=sp.PIPE,
+            stderr=sp.STDOUT,
         )
         sys.path.remove(self._get_syspath_injection())
         os.environ["PATH"].replace(self._get_path_injection(), "")
@@ -144,7 +144,7 @@ def _create_env(
         "-f",
         env_file,
     ]
-    sp.run(cmd, check=True, stdout=sp.PIPE, stderr=sp.PIPE)
+    sp.run(cmd, check=True, stdout=sp.PIPE, stderr=sp.STDOUT)
 
 
 def _insert_python(env: Dict[str, List[str]]):
@@ -166,7 +166,7 @@ def _get_envs(package_manager: PackageManager) -> Dict[str, str]:
             [package_manager.value, "env", "list", "--json"],
             check=True,
             stdout=sp.PIPE,
-            stderr=sp.PIPE,
+            stderr=sp.STDOUT,
         ).stdout.decode()
     )["envs"]
     return {env.name: env for env in map(Environment, envs)}
