@@ -126,14 +126,7 @@ def inject_env_file(
 ):
     with open(env_file) as f:
         env = yaml.load(f, Loader=yaml.FullLoader)
-
-    _check_env(env)
-    _check_env(env)
-    _insert_python(env)
-    env_name = _get_env_name(env)
-
-    _create_env(env_file, env_name, package_manager=package_manager)
-    return InjectedEnvironment(name=env_name, package_manager=package_manager)
+    return inject_env(env, package_manager)
 
 
 def _create_env(
@@ -145,6 +138,7 @@ def _create_env(
         package_manager.value,
         "env",
         "create",
+        "--yes",
         "--name",
         env_name,
         "-f",
@@ -155,7 +149,7 @@ def _create_env(
 
 def _insert_python(env: Dict[str, List[str]]):
     # inject python with same version as current environment
-    python_package = f"python ={sys.version_info.major}.{sys.version_info.minor}"
+    python_package = f"python =={sys.version_info.major}.{sys.version_info.minor}"
     env["dependencies"].append(python_package)
 
 
