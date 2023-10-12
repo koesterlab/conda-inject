@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.1.0](https://github.com/koesterlab/conda-inject/compare/v1.0.2...v1.1.0) (2023-10-12)
+
+
+### Features
+
+* support for micromamba and improved cleanup behavior ([f2a4c7b](https://github.com/koesterlab/conda-inject/commit/f2a4c7b2407d7ed37fd70fd15009306ff767053a))
+
 ## [1.0.2](https://github.com/koesterlab/conda-inject/compare/v1.0.1...v1.0.2) (2023-07-13)
 
 
