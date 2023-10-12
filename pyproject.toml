@@ -4,7 +4,7 @@ description = "Helper functions for injecting a conda environment into the curre
 name = "conda-inject"
 packages = [{include = "conda_inject"}]
 readme = "README.md"
-version = "1.0.2"
+version = "1.1.0"
 
 [tool.poetry.dependencies]
 python = "^3.9"
