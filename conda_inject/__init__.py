@@ -40,7 +40,7 @@ class InjectedEnvironment:
 
     def __post_init__(self):
         envs = _get_envs(self.package_manager)
-        self.env = envs[self.env_name]
+        self.env = envs[self.name]
         self._inject_path()
 
     def remove(self):
