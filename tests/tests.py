@@ -1,4 +1,5 @@
-from conda_inject import inject_env, inject_packages
+from pathlib import Path
+from conda_inject import inject_env, inject_packages, inject_env_file
 
 
 def test_env_inject():
@@ -9,4 +10,9 @@ def test_env_inject():
 
 def test_package_inject():
     with inject_packages(channels=["conda-forge"], packages=["humanfriendly =10.0"]):
+        import humanfriendly  # noqa F401
+
+
+def test_env_file_inject():
+    with inject_env_file(Path("tests/test-env.yaml")):
         import humanfriendly  # noqa F401

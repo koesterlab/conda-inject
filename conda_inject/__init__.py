@@ -2,11 +2,13 @@ from dataclasses import dataclass
 import hashlib
 import json
 import os
+from pathlib import Path
 import re
 import sys
 from enum import Enum
 import subprocess as sp
 import tempfile
+from typing import Dict, List
 
 import yaml
 
@@ -18,6 +20,7 @@ class PackageManager(Enum):
 
     MAMBA = "mamba"
     CONDA = "conda"
+    MICROMAMBA = "micromamba"
 
 
 @dataclass
@@ -51,8 +54,8 @@ class InjectedEnvironment:
 
 
 def inject_packages(
-    channels: list[str],
-    packages: list[str],
+    channels: List[str],
+    packages: List[str],
     package_manager: PackageManager = PackageManager.MAMBA,
 ) -> InjectedEnvironment:
     """Inject conda packages into the current environment.
@@ -70,7 +73,7 @@ def inject_packages(
 
 
 def inject_env(
-    env: dict[str, list], package_manager: PackageManager = PackageManager.MAMBA
+    env: Dict[str, List[str]], package_manager: PackageManager = PackageManager.MAMBA
 ) -> InjectedEnvironment:
     """Inject conda packages into the current environment.
 
@@ -80,15 +83,8 @@ def inject_env(
              `environment.yml` files.
     """
     _check_env(env)
-
-    # inject python with same version as current environment
-    python_package = f"python ={sys.version_info.major}.{sys.version_info.minor}"
-    env["dependencies"].append(python_package)
-
-    checksum = hashlib.sha256()
-    checksum.update(json.dumps(env).encode("utf-8"))
-    env_checksum = checksum.hexdigest()
-    env_name = f"conda-inject-{env_checksum}_"
+    _insert_python(env)
+    env_name = _get_env_name(env)
 
     envs = _get_envs(package_manager)
 
@@ -96,19 +92,56 @@ def inject_env(
         with tempfile.NamedTemporaryFile(suffix=".conda.yaml", mode="w") as tmp:
             yaml.dump(env, tmp)
             tmp.flush()
-            cmd = [
-                package_manager.value,
-                "env",
-                "create",
-                "--name",
-                env_name,
-                "-f",
-                tmp.name,
-            ]
-            sp.run(cmd, check=True, stdout=sp.PIPE, stderr=sp.PIPE)
+            _create_env(Path(tmp.name), env_name, package_manager=package_manager)
 
     _inject_path(env_name, package_manager)
     return InjectedEnvironment(name=env_name, package_manager=package_manager)
+
+
+def inject_env_file(
+    env_file: Path, package_manager: PackageManager = PackageManager.MAMBA
+):
+    with open(env_file) as f:
+        env = yaml.load(f, Loader=yaml.FullLoader)
+
+    _check_env(env)
+    _check_env(env)
+    _insert_python(env)
+    env_name = _get_env_name(env)
+
+    _create_env(env_file, env_name, package_manager=package_manager)
+    _inject_path(env_name, package_manager)
+    return InjectedEnvironment(name=env_name, package_manager=package_manager)
+
+
+def _create_env(
+    env_file: Path,
+    env_name: str,
+    package_manager: PackageManager = PackageManager.MAMBA,
+):
+    cmd = [
+        package_manager.value,
+        "env",
+        "create",
+        "--name",
+        env_name,
+        "-f",
+        env_file,
+    ]
+    sp.run(cmd, check=True, stdout=sp.PIPE, stderr=sp.PIPE)
+
+
+def _insert_python(env: Dict[str, List[str]]):
+    # inject python with same version as current environment
+    python_package = f"python ={sys.version_info.major}.{sys.version_info.minor}"
+    env["dependencies"].append(python_package)
+
+
+def _get_env_name(env: Dict[str, List[str]]) -> str:
+    checksum = hashlib.sha256()
+    checksum.update(json.dumps(env).encode("utf-8"))
+    env_checksum = checksum.hexdigest()
+    return f"conda-inject-{env_checksum}_"
 
 
 def _inject_path(env_name: str, package_manager: PackageManager):
@@ -122,7 +155,7 @@ def _inject_path(env_name: str, package_manager: PackageManager):
     )
 
 
-def _get_envs(package_manager: PackageManager) -> set[str]:
+def _get_envs(package_manager: PackageManager) -> Dict[str, str]:
     envs = json.loads(
         sp.run(
             [package_manager.value, "env", "list", "--json"],
