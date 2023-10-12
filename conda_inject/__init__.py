@@ -8,7 +8,7 @@ import sys
 from enum import Enum
 import subprocess as sp
 import tempfile
-from typing import Dict, List
+from typing import Dict, List, Optional
 
 import yaml
 
@@ -36,6 +36,12 @@ class Environment:
 class InjectedEnvironment:
     name: str
     package_manager: PackageManager
+    env: Optional[Environment] = None
+
+    def __post_init__(self):
+        envs = _get_envs(self.package_manager)
+        self.env = envs[self.env_name]
+        self._inject_path()
 
     def remove(self):
         """Remove the environment."""
@@ -45,12 +51,30 @@ class InjectedEnvironment:
             stdout=sp.PIPE,
             stderr=sp.PIPE,
         )
+        sys.path.remove(self._get_syspath_injection())
+        os.environ["PATH"].replace(self._get_path_injection(), "")
 
     def __enter__(self):
         return self
 
     def __exit__(self, *args):
         self.remove()
+
+    def _inject_path(self):
+        # manipulate python path
+        sys.path.append(self._get_syspath_injection())
+        # manipulate PATH
+        os.environ["PATH"] = f"{self._get_path_injection()}{os.environ['PATH']}"
+
+    def _get_path_injection(self):
+        return f"{self.env.path}/bin:"
+
+    def _get_syspath_injection(self):
+        return (
+            f"{self.env.path}/lib/"
+            f"python{sys.version_info.major}.{sys.version_info.minor}/"
+            "site-packages"
+        )
 
 
 def inject_packages(
@@ -94,7 +118,6 @@ def inject_env(
             tmp.flush()
             _create_env(Path(tmp.name), env_name, package_manager=package_manager)
 
-    _inject_path(env_name, package_manager)
     return InjectedEnvironment(name=env_name, package_manager=package_manager)
 
 
@@ -110,7 +133,6 @@ def inject_env_file(
     env_name = _get_env_name(env)
 
     _create_env(env_file, env_name, package_manager=package_manager)
-    _inject_path(env_name, package_manager)
     return InjectedEnvironment(name=env_name, package_manager=package_manager)
 
 
@@ -142,17 +164,6 @@ def _get_env_name(env: Dict[str, List[str]]) -> str:
     checksum.update(json.dumps(env).encode("utf-8"))
     env_checksum = checksum.hexdigest()
     return f"conda-inject-{env_checksum}_"
-
-
-def _inject_path(env_name: str, package_manager: PackageManager):
-    envs = _get_envs(package_manager)
-    env = envs[env_name]
-
-    sys.path.append(
-        f"{env.path}/lib/"
-        f"python{sys.version_info.major}.{sys.version_info.minor}/"
-        "site-packages"
-    )
 
 
 def _get_envs(package_manager: PackageManager) -> Dict[str, str]:
