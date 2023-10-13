@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.1.1](https://github.com/koesterlab/conda-inject/compare/v1.1.0...v1.1.1) (2023-10-13)
+
+
+### Bug Fixes
+
+* simplify code and better error handling ([2a98457](https://github.com/koesterlab/conda-inject/commit/2a98457f98cc32ae3b0126d242cdfc62c5e7b6db))
+
 ## [1.1.0](https://github.com/koesterlab/conda-inject/compare/v1.0.2...v1.1.0) (2023-10-12)
 
 
