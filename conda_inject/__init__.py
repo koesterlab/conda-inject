@@ -138,7 +138,6 @@ def _create_env(
         package_manager.value,
         "env",
         "create",
-        "--yes",
         "--name",
         env_name,
         "-f",
