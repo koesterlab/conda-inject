@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.2.0](https://github.com/koesterlab/conda-inject/compare/v1.1.1...v1.2.0) (2023-10-30)
+
+
+### Features
+
+* add ability to specify constraints ([#6](https://github.com/koesterlab/conda-inject/issues/6)) ([1641adc](https://github.com/koesterlab/conda-inject/commit/1641adcbce3b4695a54f9221cd93198c5b5bad20))
+
 ## [1.1.1](https://github.com/koesterlab/conda-inject/compare/v1.1.0...v1.1.1) (2023-10-13)
 
 
