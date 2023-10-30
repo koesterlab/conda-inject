@@ -219,7 +219,8 @@ def _check_packages(packages, invalid_packages: Optional[Set[str]] = None):
 
 def _get_invalid_packages(constraints: Optional[List[str]] = None) -> Set[str]:
     invalid_packages = {"python"}
-    _check_packages(constraints, invalid_packages=invalid_packages)
+    if constraints is not None:
+        _check_packages(constraints, invalid_packages=invalid_packages)
     if constraints:
         for constraint in constraints:
             m = package_spec_pattern.match(constraint)
