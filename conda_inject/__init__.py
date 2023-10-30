@@ -197,7 +197,7 @@ def _check_env(
 
 def _check_packages(packages, invalid_packages: Optional[Set[str]] = None):
     """Check if the given package specs are valid."""
-    invalid_packages = invalid_packages or {"python"}
+    invalid_packages = {"python"} if invalid_packages is None else invalid_packages
 
     for package_spec in packages:
         m = package_spec_pattern.match(package_spec)
