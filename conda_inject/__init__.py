@@ -8,7 +8,7 @@ import sys
 from enum import Enum
 import subprocess as sp
 import tempfile
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Set
 
 import yaml
 
@@ -80,6 +80,7 @@ class InjectedEnvironment:
 def inject_packages(
     channels: List[str],
     packages: List[str],
+    with_constraints: Optional[List[str]] = None,
     package_manager: PackageManager = PackageManager.MAMBA,
 ) -> InjectedEnvironment:
     """Inject conda packages into the current environment.
@@ -93,11 +94,15 @@ def inject_packages(
         "dependencies": packages,
     }
 
-    return inject_env(env, package_manager)
+    return inject_env(
+        env, package_manager=package_manager, with_constraints=with_constraints
+    )
 
 
 def inject_env(
-    env: Dict[str, List[str]], package_manager: PackageManager = PackageManager.MAMBA
+    env: Dict[str, List[str]],
+    with_constraints: Optional[List[str]] = None,
+    package_manager: PackageManager = PackageManager.MAMBA,
 ) -> InjectedEnvironment:
     """Inject conda packages into the current environment.
 
@@ -106,8 +111,9 @@ def inject_env(
              `dependencies`. The expected values are the same as for conda
              `environment.yml` files.
     """
-    _check_env(env)
-    _insert_python(env)
+    invalid_packages = _get_invalid_packages(with_constraints)
+    _check_env(env, invalid_packages=invalid_packages)
+    _insert_constraints(env, with_constraints)
     env_name = _get_env_name(env)
 
     envs = _get_envs(package_manager)
@@ -122,11 +128,15 @@ def inject_env(
 
 
 def inject_env_file(
-    env_file: Path, package_manager: PackageManager = PackageManager.MAMBA
+    env_file: Path,
+    with_constraints: Optional[List[str]] = None,
+    package_manager: PackageManager = PackageManager.MAMBA,
 ):
     with open(env_file) as f:
         env = yaml.load(f, Loader=yaml.FullLoader)
-    return inject_env(env, package_manager)
+    return inject_env(
+        env, package_manager=package_manager, with_constraints=with_constraints
+    )
 
 
 def _create_env(
@@ -146,10 +156,13 @@ def _create_env(
     sp.run(cmd, check=True, stdout=sp.PIPE, stderr=sp.STDOUT)
 
 
-def _insert_python(env: Dict[str, List[str]]):
+def _insert_constraints(env: Dict[str, List[str]], constraints: Optional[List[str]]):
     # inject python with same version as current environment
     python_package = f"python =={sys.version_info.major}.{sys.version_info.minor}"
     env["dependencies"].append(python_package)
+    # add other constraints
+    if constraints:
+        env["dependencies"].extend(constraints)
 
 
 def _get_env_name(env: Dict[str, List[str]]) -> str:
@@ -171,25 +184,30 @@ def _get_envs(package_manager: PackageManager) -> Dict[str, str]:
     return {env.name: env for env in map(Environment, envs)}
 
 
-def _check_env(env: dict[str, list]) -> bool:
+def _check_env(
+    env: dict[str, list], invalid_packages: Optional[Set[str]] = None
+) -> bool:
     """Check if the given environment is valid."""
     if "channels" not in env:
         raise ValueError("Missing 'channels' in environment.")
     if "dependencies" not in env:
         raise ValueError("Missing 'dependencies' in environment.")
-    _check_packages(env["dependencies"])
+    _check_packages(env["dependencies"], invalid_packages=invalid_packages)
 
 
-def _check_packages(packages):
+def _check_packages(packages, invalid_packages: Optional[Set[str]] = None):
     """Check if the given package specs are valid."""
+    invalid_packages = {"python"} if invalid_packages is None else invalid_packages
+
     for package_spec in packages:
         m = package_spec_pattern.match(package_spec)
         if m:
-            if m.group("package") == "python":
+            package_name = m.group("package")
+            if package_name in invalid_packages:
                 raise ValueError(
-                    "The list of packages contains python. "
+                    f"The list of packages contains {package_name}. "
                     "This is not allowed as conda-inject automatically "
-                    "chooses a python version matching to the current "
+                    f"chooses a {package_name} version matching to the current "
                     "environment."
                 )
         else:
@@ -197,3 +215,15 @@ def _check_packages(packages):
                 "Invalid package spec. Must be of the form "
                 "'mypackage=1.0.0' or 'mypackage>=1.0.0'"
             )
+
+
+def _get_invalid_packages(constraints: Optional[List[str]] = None) -> Set[str]:
+    invalid_packages = {"python"}
+    if constraints is not None:
+        _check_packages(constraints, invalid_packages=invalid_packages)
+    if constraints:
+        for constraint in constraints:
+            m = package_spec_pattern.match(constraint)
+            if m:
+                invalid_packages.add(m.group("package"))
+    return invalid_packages
