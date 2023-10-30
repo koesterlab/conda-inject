@@ -94,7 +94,9 @@ def inject_packages(
         "dependencies": packages,
     }
 
-    return inject_env(env, package_manager=package_manager, with_constraints=with_constraints)
+    return inject_env(
+        env, package_manager=package_manager, with_constraints=with_constraints
+    )
 
 
 def inject_env(
@@ -128,11 +130,13 @@ def inject_env(
 def inject_env_file(
     env_file: Path,
     with_constraints: Optional[List[str]] = None,
-    package_manager: PackageManager = PackageManager.MAMBA
+    package_manager: PackageManager = PackageManager.MAMBA,
 ):
     with open(env_file) as f:
         env = yaml.load(f, Loader=yaml.FullLoader)
-    return inject_env(env, package_manager=package_manager, with_constraints=with_constraints)
+    return inject_env(
+        env, package_manager=package_manager, with_constraints=with_constraints
+    )
 
 
 def _create_env(
@@ -180,7 +184,9 @@ def _get_envs(package_manager: PackageManager) -> Dict[str, str]:
     return {env.name: env for env in map(Environment, envs)}
 
 
-def _check_env(env: dict[str, list], invalid_packages: Optional[Set[str]]=None) -> bool:
+def _check_env(
+    env: dict[str, list], invalid_packages: Optional[Set[str]] = None
+) -> bool:
     """Check if the given environment is valid."""
     if "channels" not in env:
         raise ValueError("Missing 'channels' in environment.")
@@ -189,7 +195,7 @@ def _check_env(env: dict[str, list], invalid_packages: Optional[Set[str]]=None) 
     _check_packages(env["dependencies"], invalid_packages=invalid_packages)
 
 
-def _check_packages(packages, invalid_packages: Optional[Set[str]]=None):
+def _check_packages(packages, invalid_packages: Optional[Set[str]] = None):
     """Check if the given package specs are valid."""
     invalid_packages = invalid_packages or {"python"}
 
