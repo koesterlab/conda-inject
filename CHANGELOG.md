@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.3.0](https://github.com/koesterlab/conda-inject/compare/v1.2.0...v1.3.0) (2023-11-06)
+
+
+### Features
+
+* do not remove env upon exiting context, instead, only deactivate it ([dd6b3f7](https://github.com/koesterlab/conda-inject/commit/dd6b3f7c654ea67713f6e2ffd0c663601ce43db0))
+
 ## [1.2.0](https://github.com/koesterlab/conda-inject/compare/v1.1.1...v1.2.0) (2023-10-30)
 
 
