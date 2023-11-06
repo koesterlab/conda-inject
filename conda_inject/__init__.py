@@ -51,14 +51,22 @@ class InjectedEnvironment:
             stdout=sp.PIPE,
             stderr=sp.STDOUT,
         )
-        sys.path.remove(self._get_syspath_injection())
+        self.deactivate()
+
+    def deactivate(self):
+        injection = self._get_syspath_injection()
+        try:
+            sys.path.remove(injection)
+        except ValueError:
+            # nothing to remove
+            pass
         os.environ["PATH"].replace(self._get_path_injection(), "")
 
     def __enter__(self):
         return self
 
     def __exit__(self, *args):
-        self.remove()
+        self.deactivate()
 
     def _inject_path(self):
         # manipulate python path
