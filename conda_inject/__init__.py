@@ -60,7 +60,7 @@ class InjectedEnvironment:
         except ValueError:
             # nothing to remove
             pass
-        os.environ["PATH"].replace(self._get_path_injection(), "")
+        os.environ["PATH"] = os.environ["PATH"].replace(self._get_path_injection(), "")
 
     def __enter__(self):
         return self
@@ -72,10 +72,10 @@ class InjectedEnvironment:
         # manipulate python path
         sys.path.append(self._get_syspath_injection())
         # manipulate PATH
-        os.environ["PATH"] = f"{self._get_path_injection()}{os.environ['PATH']}"
+        os.environ["PATH"] = f"{os.environ['PATH']}{self._get_path_injection()}"
 
     def _get_path_injection(self):
-        return f"{self.env.path}/bin:"
+        return f":{self.env.path}/bin"
 
     def _get_syspath_injection(self):
         return (
