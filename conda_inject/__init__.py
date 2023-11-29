@@ -60,7 +60,7 @@ class InjectedEnvironment:
         except ValueError:
             # nothing to remove
             pass
-        os.environ["PATH"].replace(self._get_path_injection(), "")
+        os.environ["PATH"] = os.environ["PATH"].replace(self._get_path_injection(), "")
 
     def __enter__(self):
         return self
