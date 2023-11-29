@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.3.1](https://github.com/koesterlab/conda-inject/compare/v1.3.0...v1.3.1) (2023-11-29)
+
+
+### Bug Fixes
+
+* path injection order ([#10](https://github.com/koesterlab/conda-inject/issues/10)) ([f1bcf6c](https://github.com/koesterlab/conda-inject/commit/f1bcf6c55efcf6e915fc541c9e3b600e233e8482))
+
 ## [1.3.0](https://github.com/koesterlab/conda-inject/compare/v1.2.0...v1.3.0) (2023-11-06)
 
 
