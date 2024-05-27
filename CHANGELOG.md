@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.3.2](https://github.com/koesterlab/conda-inject/compare/v1.3.1...v1.3.2) (2024-05-27)
+
+
+### Bug Fixes
+
+* do not fail if pip is used in the env ([#13](https://github.com/koesterlab/conda-inject/issues/13)) ([ae7f4c0](https://github.com/koesterlab/conda-inject/commit/ae7f4c0f389378f3d90bbadad2d1e2bca791cb2f))
+
 ## [1.3.1](https://github.com/koesterlab/conda-inject/compare/v1.3.0...v1.3.1) (2023-11-29)
 
 
