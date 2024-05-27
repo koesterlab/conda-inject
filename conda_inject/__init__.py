@@ -208,6 +208,9 @@ def _check_packages(packages, invalid_packages: Optional[Set[str]] = None):
     invalid_packages = {"python"} if invalid_packages is None else invalid_packages
 
     for package_spec in packages:
+        if not isinstance(package_spec, str):
+            # ignore e.g. dict rows (coming from combining with pip)
+            continue
         m = package_spec_pattern.match(package_spec)
         if m:
             package_name = m.group("package")

@@ -18,6 +18,11 @@ def test_env_file_inject():
         import humanfriendly  # noqa F401
 
 
+def test_pip():
+    with inject_env_file(Path("tests/test-env-pip.yaml")):
+        import humanfriendly  # noqa F401
+
+
 def test_env_inject_with_constraints():
     env = {"channels": ["conda-forge"], "dependencies": ["humanfriendly =10.0"]}
     with inject_env(env, with_constraints=["requests =2.31"]):
