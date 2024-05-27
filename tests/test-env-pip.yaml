@@ -1,0 +1,6 @@
+channels:
+  - conda-forge
+dependencies:
+  - pip
+  - pip:
+    - humanfriendly =10.0
